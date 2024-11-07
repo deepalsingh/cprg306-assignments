@@ -52,6 +52,13 @@ export default function Home() {
         </li>
       </ul>
 
+      <ul>
+        <li>
+        <Link className= {linkStyles} 
+        href="/week-8/">Week 8 Assignment</Link>
+        </li>
+      </ul>
+
     </main>
 
   );
