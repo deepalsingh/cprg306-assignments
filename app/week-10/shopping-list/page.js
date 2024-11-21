@@ -1,86 +1,40 @@
-"use client";
+'use client';
 
-import { useUserAuth } from "./_utils/auth-context";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getItems } from "../_services/shopping-list-service";  
+import { useState } from 'react';
+import NewItem from './new-item';
+import ItemList from './item-list';
+import MealIdeas from './meal-ideas';  // Import the new component
+import itemsData from './items.json';
 
-const LandingPage = () => {
-  const { user, gitHubSignIn, firebaseSignOut } = useUserAuth();
-  const router = useRouter();
-  const [shoppingList, setShoppingList] = useState([]);
+export default function Page() {
+  const [items, setItems] = useState(itemsData);
+  const [selectedItemName, setSelectedItemName] = useState(""); // New state to hold selected ingredient
 
-  const handleSignIn = async () => {
-    try {
-      await gitHubSignIn();
-      router.push("/week-9/shopping-list");
-    } catch (error) {
-      console.error("Error signing in:", error);
-    }
+  // Event handler for adding a new item
+  const handleAddItem = (item) => {
+    setItems((prevItems) => [...prevItems, item]);
   };
 
-  const handleSignOut = async () => {
-    try {
-      await firebaseSignOut();
-      router.push("/week-9");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
+  // Event handler for selecting an item
+  const handleItemSelect = (itemName) => {
+    const cleanedItemName = itemName.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|[\uD83C-\uDBFF][\uDC00-\uDFFF])/g, '').trim();
+    console.log("Cleaned Ingredient:", cleanedItemName); // Log cleaned item name
+    setSelectedItemName(cleanedItemName); // Update the selected ingredient
   };
 
-  const loadShoppingList = async () => {
-    if (user?.uid) {
-      try {
-        const items = await getItems(user.uid);  
-        setShoppingList(items);
-      } catch (error) {
-        console.error("Error fetching shopping list:", error);
-      }
-    }
-  };
-
-  
-  useEffect(() => {
-    if (user?.uid) {  
-      loadShoppingList();
-    }
-  }, [user]);  
-
-  if (user) {
-    return (
-      <div>
-        <h1>Welcome, {user.displayName}!</h1>
-        <p>Email: {user.email}</p>
-
-        {/* Display the shopping list items */}
-        {shoppingList.length > 0 ? (
-          <div>
-            <h2>Your Shopping List</h2>
-            <ul>
-              {shoppingList.map((item) => (
-                <li key={item.id}>
-                  {item.name} - {item.quantity}
-                </li>
-              ))}
-            </ul>
-            <button onClick={() => router.push("/week-9/shopping-list")}>Go to Shopping List</button>
-          </div>
-        ) : (
-          <p>Your shopping list is empty.</p>
-        )}
-
-        <button onClick={handleSignOut}>Log Out</button>
-      </div>
-    );
-  }
+  console.log("Selected ingredient in Page:", selectedItemName); // Log selected item name in page
 
   return (
-    <div>
-      <h1>Welcome to the Shopping List App</h1>
-      <p>Please log in to access your shopping list</p>
-      <button onClick={handleSignIn}>Login with GitHub</button>
-    </div>
+    <main className="p-5 flex">
+      <div className="flex-1">
+        <h1 className="text-2xl font-bold mb-4">Shopping List</h1>
+        <NewItem onAddItem={handleAddItem} />
+        <ItemList items={items} onItemSelect={handleItemSelect} />
+      </div>
+      
+      <div className="flex-1 ml-10">
+        {selectedItemName && <MealIdeas ingredient={selectedItemName} />}  {/* Render MealIdeas only if an ingredient is selected */}
+      </div>
+    </main>
   );
-};
-
-export default LandingPage;
+}
